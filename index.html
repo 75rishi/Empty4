@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Countdown — Upload on 27-12-2025 6:30</title>
+  <style>
+    :root{--accent: #ffffff;--muted: rgba(255,255,255,0.35)}
+    html,body{height:100%;margin:0}
+    body{
+      background:#000; /* black background */
+      color:var(--accent);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      display:flex;align-items:center;justify-content:center;flex-direction:column;
+      gap:18px;padding:24px;box-sizing:border-box;
+    }
+
+    .card{
+      text-align:center;max-width:880px;width:100%;
+    }
+
+    .title{
+      font-size:clamp(18px,3.2vw,40px);
+      letter-spacing:1px;
+      text-transform:uppercase;
+      opacity:0.95;
+      animation: pulse 2.4s infinite ease-in-out;
+    }
+
+    @keyframes pulse{
+      0%{transform:scale(1);opacity:0.9}
+      50%{transform:scale(1.03);opacity:1}
+      100%{transform:scale(1);opacity:0.9}
+    }
+
+    .subtitle{font-size:clamp(12px,1.6vw,18px);color:var(--muted)}
+
+    .countdown{
+      display:flex;gap:12px;justify-content:center;margin-top:8px;flex-wrap:wrap
+    }
+
+    .tile{
+      min-width:96px;padding:14px;border-radius:12px;background:linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));
+      box-shadow: 0 6px 20px rgba(0,0,0,0.6);backdrop-filter:blur(6px);
+      display:flex;flex-direction:column;align-items:center;justify-content:center;transition:transform .36s cubic-bezier(.2,.9,.2,1),opacity .36s;
+    }
+
+    .num{font-size:clamp(20px,3.6vw,44px);font-weight:700;letter-spacing:1px}
+    .label{font-size:12px;color:var(--muted);margin-top:6px;text-transform:uppercase}
+
+    /* change animation when number updates */
+    .animate{
+      transform:translateY(-8px) scale(1.02);
+      opacity:1;
+      transition:transform .45s ease,opacity .45s ease;
+    }
+
+    .small-note{margin-top:14px;color:var(--muted);font-size:13px}
+
+    /* subtle floating "countdown running" glow */
+    .glow{position:fixed;right:16px;bottom:16px;padding:8px 12px;border-radius:999px;background:rgba(255,255,255,0.03);color:var(--muted);font-size:12px}
+
+    /* responsive tweaks */
+    @media (max-width:520px){
+      .tile{min-width:68px;padding:10px;border-radius:10px}
+      .num{font-size:22px}
+    }
+
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="title">Upload on 27-12-2025 • 6:30</div>
+    <div class="subtitle">Countdown chalte rahega — animation ke saath</div>
+
+    <div class="countdown" id="countdown">
+      <div class="tile">
+        <div class="num" id="days">--</div>
+        <div class="label">Days</div>
+      </div>
+      <div class="tile">
+        <div class="num" id="hours">--</div>
+        <div class="label">Hours</div>
+      </div>
+      <div class="tile">
+        <div class="num" id="mins">--</div>
+        <div class="label">Minutes</div>
+      </div>
+      <div class="tile">
+        <div class="num" id="secs">--</div>
+        <div class="label">Seconds</div>
+      </div>
+    </div>
+
+    <div class="small-note">Target: 27 December 2025 — 06:30 (Asia/Kolkata)</div>
+  </div>
+
+  <div class="glow" id="status">Countdown running...</div>
+
+  <script>
+    // Target date/time in Asia/Kolkata timezone: 2025-12-27 18:30 IST
+    // Use an ISO string with offset +05:30 to ensure correct moment regardless of user's browser locale.
+    const target = new Date('2025-12-27T18:30:00+05:30');
+
+    const els = {
+      days: document.getElementById('days'),
+      hours: document.getElementById('hours'),
+      mins: document.getElementById('mins'),
+      secs: document.getElementById('secs'),
+      status: document.getElementById('status')
+    };
+
+    function pad(n){return String(n).padStart(2,'0')}
+
+    function update(){
+      const now = new Date();
+      let diff = Math.max(0, Math.floor((target - now) / 1000)); // seconds
+
+      if(diff <= 0){
+        // reached
+        els.days.textContent = '00';
+        els.hours.textContent = '00';
+        els.mins.textContent = '00';
+        els.secs.textContent = '00';
+        els.status.textContent = 'Uploaded ✅';
+        els.status.style.color = 'white';
+        return;
+      }
+
+      const days = Math.floor(diff / (24*3600));
+      diff -= days * 24*3600;
+      const hours = Math.floor(diff / 3600);
+      diff -= hours * 3600;
+      const mins = Math.floor(diff / 60);
+      const secs = diff - mins*60;
+
+      animateIfChanged(els.days, String(days));
+      animateIfChanged(els.hours, pad(hours));
+      animateIfChanged(els.mins, pad(mins));
+      animateIfChanged(els.secs, pad(secs));
+
+      const human = `${days}d ${pad(hours)}h ${pad(mins)}m ${pad(secs)}s`;
+      els.status.textContent = `Countdown running — ${human}`;
+    }
+
+    // helper: add a class to animate when value changes
+    function animateIfChanged(el, newVal){
+      if(el.textContent !== newVal){
+        el.textContent = newVal;
+        el.classList.add('animate');
+        // remove the class after animation time so it can re-run on next change
+        setTimeout(()=>el.classList.remove('animate'), 480);
+      }
+    }
+
+    // initial render
+    update();
+    // update every second
+    const timer = setInterval(update, 1000);
+
+    // optional: allow quick editing by clicking the title to change target
+    document.querySelector('.title').addEventListener('click', ()=>{
+      const val = prompt('Enter target date/time in this exact format: YYYY-MM-DD HH:MM (24h) — example: 2025-12-27 18:30');
+      if(!val) return;
+      const parts = val.trim().split(/\s+/);
+      if(parts.length !== 2){ alert('Wrong format'); return; }
+      const iso = parts[0] + 'T' + parts[1] + ':00+05:30';
+      const d = new Date(iso);
+      if(isNaN(d)) { alert('Invalid date'); return; }
+      target.setTime(d.getTime());
+      update();
+      els.status.textContent = 'New target set — countdown running...';
+    });
+
+  </script>
+</body>
+</html>
